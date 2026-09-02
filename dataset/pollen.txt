@@ -1,0 +1,13 @@
+Depth Sample Count
+shallow A 12
+shallow A 14
+shallow B 10
+shallow B 7
+medium A 16
+medium A 12
+medium B 10
+medium B 19
+deep A 21
+deep A 29
+deep B 33
+deep B 30

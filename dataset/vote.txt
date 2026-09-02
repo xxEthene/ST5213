@@ -1,0 +1,3 @@
+"Sex" "CDU.CSU" "SPD" "FDP" "Greens" "PDS" "Others"
+"1" "M" 190 211 22 57 90 38
+"2" "F" 168 183 16 62 103 13
