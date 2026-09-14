@@ -277,9 +277,7 @@ def drop1_lm(model, test="F"):
     response = lhs.strip()
 
     # get term labels from patsy (pure strings)
-    design_info = getattr(model.model.data, "design_info", None)
-    if design_info is None:
-        design_info = model.model.data.orig_exog.design_info
+    design_info = model.model.data.design_info
     all_terms = [str(t) for t in design_info.term_names if str(t) not in ("Intercept", "1")]
 
     # hierarchy via component sets (best for ':' interactions)
@@ -352,8 +350,20 @@ def drop1_glm(model, test="Chisq"):
     response = lhs.strip()
 
     # get term labels from patsy (pure strings)
-    design_info = model.model.data.design_info
-    all_terms = [str(t) for t in design_info.term_names if str(t) not in ("Intercept", "1")]
+    # design_info = model.model.data.design_info
+    # all_terms = [str(t) for t in design_info.term_names if str(t) not in ("Intercept", "1")]
+
+    data = model.model.data
+
+    if hasattr(data, "design_info"):
+        term_names = [str(t) for t in data.design_info.term_names]
+    elif hasattr(data, "model_spec"):
+        # Patsy Term objects -> use .name() to get valid formula fragments
+        term_names = [t.name() for t in data.model_spec.terms]
+    else:
+        raise AttributeError("No design_info or model_spec found.")
+
+    all_terms = [t for t in term_names if t not in ("Intercept", "1")]
 
     # hierarchy via component sets (best for ':' interactions)
     term_comps = {t: set(t.split(":")) for t in all_terms}
@@ -764,8 +774,22 @@ def stepAIC(
     lhs, _ = _split_formula(current_formula)
 
     # High-level terms from patsy design_info, excluding intercept
-    design_info = current_fit.model.data.design_info
-    current_terms = [t for t in design_info.term_names if t != "Intercept"]
+    # design_info = current_fit.model.data.design_info
+    # current_terms = [t for t in design_info.term_names if t != "Intercept"]
+
+    data = current_fit.model.data
+
+    # High-level terms from patsy, excluding intercept
+    if hasattr(data, "design_info"):
+        # older statsmodels layout
+        term_names = list(data.design_info.term_names)
+    elif hasattr(data, "model_spec"):
+        # statsmodels 0.15.x layout (patsy Term objects)
+        term_names = [t.name() for t in data.model_spec.terms]
+    else:
+        raise AttributeError("Cannot find term metadata (no design_info or model_spec).")
+
+    current_terms = [t for t in term_names if t not in ("Intercept", "1")]
 
     steps: List[Dict[str, Any]] = []
     current_aic = float(current_fit.aic)
