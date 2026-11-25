@@ -276,9 +276,16 @@ def drop1_lm(model, test="F"):
     lhs, _ = formula_str.split("~", 1)
     response = lhs.strip()
 
-    # get term labels from patsy (pure strings)
-    design_info = model.model.data.design_info
-    all_terms = [str(t) for t in design_info.term_names if str(t) not in ("Intercept", "1")]
+    data = model.model.data
+    model_spec = getattr(data, "model_spec", None)
+    if model_spec is None:
+        model_spec = data.design_info
+
+    if hasattr(model_spec, "term_names"):
+        term_names = model_spec.term_names
+    else:
+        term_names = [str(term) for term in model_spec.terms]
+    all_terms = [term for term in term_names if term not in ("Intercept", "1")]
 
     # hierarchy via component sets (best for ':' interactions)
     term_comps = {t: set(t.split(":")) for t in all_terms}
